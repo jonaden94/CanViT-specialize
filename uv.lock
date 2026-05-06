@@ -98,7 +98,7 @@ wheels = [
 [[package]]
 name = "canvit-pytorch"
 version = "0.1.9"
-source = { git = "https://github.com/m2b3/CanViT-PyTorch.git#7937b73b97a8896ba10b89b3c70af5f38247f22f" }
+source = { git = "https://github.com/jonaden94/CanViT-PyTorch.git#cc77f4f8277945cc10423d31118ad3439d85d7e8" }
 dependencies = [
     { name = "huggingface-hub" },
     { name = "numpy" },
@@ -153,7 +153,7 @@ gcp-in1k-finetune = [
 
 [package.metadata]
 requires-dist = [
-    { name = "canvit-pytorch", git = "https://github.com/m2b3/CanViT-PyTorch.git" },
+    { name = "canvit-pytorch", git = "https://github.com/jonaden94/CanViT-PyTorch.git" },
     { name = "comet-ml", specifier = ">=3.30.0" },
     { name = "dinov3", git = "https://github.com/facebookresearch/dinov3.git?rev=54694f7627fd815f62a5dcc82944ffa6153bbb76" },
     { name = "huggingface-hub", specifier = ">=0.20.0" },
