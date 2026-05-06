@@ -22,11 +22,14 @@ For the fused **CanViT + probe** pair, see `canvit_pytorch.CanViTForSemanticSegm
 
 ## Training
 
-`COMET_API_KEY`, `COMET_WORKSPACE`, and `ADE20K_ROOT` must be set before training.
+`ADE20K_ROOT` must be set before training, plus credentials for whichever
+experiment tracker you pick (W&B is the default — set `WANDB_PROJECT`; or
+pass `--tracker comet` and set `COMET_API_KEY` + `COMET_WORKSPACE`; or
+`--tracker none` to disable logging).
 
 ```bash
 cp .envrc.example .envrc && direnv allow
-# Edit .envrc to point at your dataset / Comet workspace.
+# Edit .envrc to point at your dataset and tracker config.
 ```
 
 ### ADE20K segmentation probe (frozen CanViT)

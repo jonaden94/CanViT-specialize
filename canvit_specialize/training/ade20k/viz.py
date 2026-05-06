@@ -1,21 +1,46 @@
 """Visualization for ADE20K probe training (canvas and single-probe)."""
 
+import gc
+import io
+import logging
 from collections.abc import Mapping
 from typing import Protocol
 
-import comet_ml
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
 from matplotlib.figure import Figure
+from PIL import Image as PILImage
 from sklearn.decomposition import PCA
 from torch import Tensor
 
 from canvit_specialize.datasets.ade20k import IGNORE_LABEL, NUM_CLASSES
 from canvit_specialize.training.ade20k.config import CanvasFeatureType
 from canvit_specialize.training.ade20k.features import CanvasFeatures
+from canvit_specialize.training.ade20k.tracker import Tracker
 from canvit_pytorch.preprocess import imagenet_denormalize
+
+_log = logging.getLogger(__name__)
+
+
+def _log_figure(exp: Tracker, fig: Figure, name: str, step: int) -> None:
+    """Log a matplotlib Figure to the active tracker. Aggressively cleans up to prevent leaks."""
+    try:
+        with io.BytesIO() as buf:
+            fig.savefig(buf, format="png", dpi=100, bbox_inches="tight")
+            buf.seek(0)
+            img = PILImage.open(buf)
+            img.load()  # decode while buf is alive — both backends accept PIL.Image
+        exp.log_image(img, name=name, step=step)
+    except Exception as e:
+        _log.exception(f"Failed to log figure {name} at step {step}: {e}")
+    finally:
+        for ax in fig.axes:
+            ax.clear()
+        fig.clf()
+        plt.close(fig)
+        gc.collect()
 
 
 class ProbeStateLike(Protocol):
@@ -139,7 +164,7 @@ def make_viz_figure(
 
 
 def log_viz(
-    exp: comet_ml.Experiment,
+    exp: Tracker,
     step: int,
     probes: Mapping[CanvasFeatureType, ProbeStateLike],
     feats: CanvasFeatures,
@@ -150,8 +175,7 @@ def log_viz(
     split: str = "train",
 ) -> None:
     fig = make_viz_figure(probes, feats, images, masks, n_samples, n_timesteps)
-    exp.log_figure(figure_name=f"viz_{split}_{step}", figure=fig, step=step)
-    plt.close(fig)
+    _log_figure(exp, fig, name=f"viz_{split}_{step}", step=step)
 
 
 def make_probe_viz_figure(
@@ -221,7 +245,7 @@ def make_probe_viz_figure(
 
 
 def log_probe_viz(
-    exp: comet_ml.Experiment,
+    exp: Tracker,
     step: int,
     probe: torch.nn.Module,
     features: Tensor,
@@ -231,5 +255,4 @@ def log_probe_viz(
     split: str = "val",
 ) -> None:
     fig = make_probe_viz_figure(probe, features, images, masks, n_samples)
-    exp.log_figure(figure_name=f"viz_{split}_{step}", figure=fig, step=step)
-    plt.close(fig)
+    _log_figure(exp, fig, name=f"viz_{split}_{step}", step=step)

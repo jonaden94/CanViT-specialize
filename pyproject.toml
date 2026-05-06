@@ -13,6 +13,7 @@ dependencies = [
     "tyro>=1.0.0",
     "tqdm>=4.60.0",
     "comet-ml>=3.30.0",
+    "wandb>=0.18.0",
     "matplotlib>=3.8.0",
     "pandas>=2.0.0",
     "scikit-learn>=1.4.0",

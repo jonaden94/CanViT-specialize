@@ -5,7 +5,6 @@ import os
 import time
 from dataclasses import asdict, dataclass
 
-import comet_ml
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,6 +17,7 @@ from canvit_pytorch.probes import SegmentationProbe
 from canvit_specialize.training.ade20k.common import make_ade20k_loaders, make_amp_ctx, make_optimizer_and_scheduler
 from canvit_specialize.training.ade20k.config import ProbeTrainBase
 from canvit_specialize.training.ade20k.loss import ce_loss, upsample_preds
+from canvit_specialize.training.ade20k.tracker import make_tracker
 from canvit_specialize.training.ade20k.viz import log_probe_viz
 from canvit_specialize.metrics import mIoUAccumulator
 
@@ -79,16 +79,21 @@ def train(cfg: DINOv3ProbeTrainConfig) -> None:
     # Data
     train_loader, val_loader = make_ade20k_loaders(cfg)
 
-    # Comet
-    exp = comet_ml.Experiment()
+    # Experiment tracker (comet | wandb | none)
     model_short = cfg.model.split("/")[-1].replace("-pretrain-lvd1689m", "").replace("-pretrain", "")
     exp_name = f"{model_short}_{cfg.resolution}px_{time.strftime('%Y-%m-%d-%H%M%S-%Z')}"
-    exp.set_name(exp_name)
+    exp = make_tracker(
+        tracker=cfg.tracker,
+        run_name=exp_name,
+        wandb_project=cfg.wandb_project,
+        wandb_entity=cfg.wandb_entity,
+        wandb_dir=cfg.wandb_dir,
+    )
     exp.log_parameters(asdict(cfg))
     exp.add_tag("dinov3-baseline")
     exp.add_tag(model_short)
     metric_prefix = f"{model_short}_{cfg.resolution}px"
-    log.info(f"Comet: {exp.workspace}/{exp.project_name}/{exp.get_key()} ({exp_name})")
+    log.info(f"Tracker: {cfg.tracker} (run_id={exp.get_key()}, name={exp_name})")
 
     job_id = os.environ.get("SLURM_JOB_ID", "local")
     timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -225,3 +230,4 @@ def train(cfg: DINOv3ProbeTrainConfig) -> None:
     log.info(f"Training complete. Best mIoU: {100*best_miou:.2f}%")
     exp.log_metric(f"{metric_prefix}/best_miou", best_miou)
     log.info("=" * 60)
+    exp.end()

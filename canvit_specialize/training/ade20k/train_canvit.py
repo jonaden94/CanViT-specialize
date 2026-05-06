@@ -11,7 +11,6 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-import comet_ml
 import torch
 import torch.nn as nn
 from canvit_pytorch import CanViTForPretrainingHFHub
@@ -32,6 +31,7 @@ from canvit_specialize.training.ade20k.config import CANVAS_FEATURES, CanvasFeat
 from canvit_specialize.training.ade20k.features import CanvasFeatures, extract_canvas_features
 from canvit_specialize.training.ade20k.loss import ce_loss, upsample_preds
 from canvit_specialize.training.ade20k.state import ProbeState
+from canvit_specialize.training.ade20k.tracker import make_tracker
 
 log = logging.getLogger(__name__)
 
@@ -246,13 +246,18 @@ def train(cfg: Config) -> None:
     # Data
     train_loader, val_loader = make_ade20k_loaders(cfg)
 
-    # Comet
-    exp = comet_ml.Experiment()
+    # Experiment tracker (comet | wandb | none)
     feats_str = "+".join(cfg.features)
     model_slug = cfg.model_repo.split("/")[-1]
     ts = time.strftime("%Y-%m-%d-%H%M%S-%Z")
     exp_name = f"canvit_{model_slug}_{feats_str}_{cfg.n_timesteps}t_{cfg.glimpse_px}g_s{cfg.scene_size}_c{canvas_grid}_{ts}"
-    exp.set_name(exp_name)
+    exp = make_tracker(
+        tracker=cfg.tracker,
+        run_name=exp_name,
+        wandb_project=cfg.wandb_project,
+        wandb_entity=cfg.wandb_entity,
+        wandb_dir=cfg.wandb_dir,
+    )
     exp.log_parameters(asdict(cfg))
     exp.add_tag("canvas-probe")
     exp.add_tag(model_slug)
@@ -261,7 +266,7 @@ def train(cfg: Config) -> None:
         exp.add_tag("finetune")
         if cfg.init_probe_repo:
             exp.add_tag("lp-ft")
-    log.info(f"Comet: {exp.workspace}/{exp.project_name}/{exp.get_key()} ({exp_name})")
+    log.info(f"Tracker: {cfg.tracker} (run_id={exp.get_key()}, name={exp_name})")
 
     job_id = os.environ.get("SLURM_JOB_ID", "local")
     timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -468,3 +473,4 @@ def train(cfg: Config) -> None:
             exp.log_metric(f"best/{name}_t{t}", v)
         log.info(f"  {name}: t0={p.best_mious[0]:.4f} ... t{p.n_timesteps-1}={p.best_last_miou:.4f}")
     log.info("=" * 60)
+    exp.end()

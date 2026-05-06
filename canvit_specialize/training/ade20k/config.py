@@ -8,6 +8,20 @@ from typing import Literal
 from canvit_pytorch import resolve_canvit_repo
 
 
+def _default_wandb_project() -> str | None:
+    return os.environ.get("WANDB_PROJECT")
+
+
+def _default_wandb_entity() -> str | None:
+    return os.environ.get("WANDB_ENTITY") or None
+
+
+def _default_wandb_dir() -> Path | None:
+    if d := os.environ.get("WANDB_DIR"):
+        return Path(d)
+    return None
+
+
 def _default_probe_ckpt_dir() -> Path:
     base = os.environ.get("CHECKPOINTS_DIR", "checkpoints")
     return Path(base) / "canvit-ade20k-probes"
@@ -74,6 +88,16 @@ class ProbeTrainBase:
     device: str = "cuda"
     amp: bool = True
     probe_ckpt_dir: Path | None = field(default_factory=_default_probe_ckpt_dir)
+
+    # Experiment tracker
+    tracker: Literal["comet", "wandb", "none"] = "wandb"
+    """Backend for parameter/metric/figure logging."""
+    wandb_project: str | None = field(default_factory=_default_wandb_project)
+    """W&B project name. Required when tracker='wandb'. Defaults to $WANDB_PROJECT."""
+    wandb_entity: str | None = field(default_factory=_default_wandb_entity)
+    """W&B entity (team or user). Defaults to $WANDB_ENTITY (empty = your default account)."""
+    wandb_dir: Path | None = field(default_factory=_default_wandb_dir)
+    """Directory wandb writes its run files into. Defaults to $WANDB_DIR. None = wandb's default (./wandb)."""
 
 
 @dataclass
