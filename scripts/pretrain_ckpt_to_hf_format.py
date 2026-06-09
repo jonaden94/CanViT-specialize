@@ -2,7 +2,7 @@
 that `CanViTForPretrainingHFHub.from_pretrained(<dir>)` reads.
 
 Output dir gets:
-    config.json        — backbone_name, model_config, canvas_patch_grid_sizes
+    config.json        — backbone_name, model_config, canvas_patch_grid_sizes, glimpse_grid_size
     model.safetensors  — model state_dict
 
 Usage:
@@ -55,6 +55,11 @@ def main(args: Args) -> None:
         "backbone_name": raw["backbone_name"],
         "model_config": raw["model_config"],
         "canvas_patch_grid_sizes": raw["canvas_patch_grid_sizes"],
+        # Glimpse token-grid side (tokens per glimpse edge). Lets the HF-loaded
+        # model / eval reconstruct the trained pixel glimpse size as
+        # ``glimpse_grid_size * patch_size_px`` for any patch size. May be absent
+        # in pre-this-field checkpoints (older runs) -> consumers fall back to 8.
+        "glimpse_grid_size": raw.get("glimpse_grid_size"),
         "metadata": {
             "source_pt": str(args.pt_path),
             "step": raw.get("step"),
