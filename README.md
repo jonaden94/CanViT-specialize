@@ -4,11 +4,47 @@ Training loops for [CanViT](https://github.com/m2b3/CanViT-PyTorch) downstream p
 
 ## Install
 
+To **use** this package elsewhere:
+
 ```bash
 uv add "canvit-specialize @ git+https://github.com/m2b3/CanViT-specialize.git"
 ```
 
 For TPU finetuning, see [`gcp_in1k_clf_ft/README.md`](canvit_specialize/training/gcp_in1k_clf_ft/README.md).
+
+### Local multi-repo setup (development)
+
+This repo is part of a five-repo active-vision project that is developed
+together, with `CanViT-specialize` depending on `CanViT-PyTorch`:
+
+```
+repos/
+├── fovi/               # leaf — no internal deps
+├── CanViT-PyTorch/     # depends on fovi
+├── CanViT-specialize/  # this repo; depends on CanViT-PyTorch
+├── CanViT-pretrain/    # depends on CanViT-PyTorch[fovi]
+└── CanViT-eval/        # depends on CanViT-PyTorch[fovi] + CanViT-specialize
+```
+
+Each repo has its **own** uv-managed venv. Clone all five **as siblings in the
+same parent folder**, then:
+
+```bash
+uv sync
+```
+
+The cross-repo link is committed in `pyproject.toml` under `[tool.uv.sources]`
+as a **relative-path editable install**
+(`canvit-pytorch = { path = "../CanViT-PyTorch", editable = true }`). Relative
+paths resolve on any machine as long as the repos are siblings, and the editable
+install means edits in the local `CanViT-PyTorch` clone (and, transitively,
+`fovi`) are picked up immediately — no reinstall, no manual `uv pip install -e`.
+To install without the sibling clones, swap that line back to the remote fork
+(`canvit-pytorch = { git = "https://github.com/jonaden94/CanViT-PyTorch.git" }`)
+and `uv sync`.
+
+> For frozen multi-day runs, see `CanViT-pretrain`'s README
+> ("Pinning code for long runs").
 
 ## Using a pre-trained probe
 
