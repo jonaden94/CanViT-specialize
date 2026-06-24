@@ -36,6 +36,7 @@ packages = ["canvit_specialize"]
 # installs. Groups + `conflicts` keep the two resolutions distinct.
 [dependency-groups]
 dev = [
+    "ipykernel",  # Jupyter kernel for notebooks (installed in both .venv and .venv-cu126)
     "basedpyright>=1.37.2",
     "pypatree>=0.4.0",
     "pytest>=9.0.2",
@@ -70,11 +71,11 @@ gcp-in1k-finetune = [
     #   uv pip install --no-deps "dinov3-in1k-probes @ git+https://github.com/m2b3/dinov3-in1k-probes.git"
 ]
 
-# V100 (sm_70) path: cu126 wheels, pinned for reproducibility (the working
+# V100 + A100 path: cu126 wheels, pinned for reproducibility (the working
 # backup had torch 2.11.0 / torchvision 0.26.0). A third conflicting torch
 # provider alongside `cuda` and `gcp-in1k-finetune`. Build with:
-#   UV_PROJECT_ENVIRONMENT=.venv-v100 uv sync --no-group cuda --group v100
-v100 = [
+#   UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126
+cu126 = [
     "torch==2.11.0",
     "torchvision==0.26.0",
 ]
@@ -103,7 +104,7 @@ default-groups = ["dev", "cuda"]
 # incompatible so uv emits separate lockfile resolutions for each instead of
 # trying to reconcile them.
 conflicts = [
-    [{ group = "cuda" }, { group = "gcp-in1k-finetune" }, { group = "v100" }],
+    [{ group = "cuda" }, { group = "gcp-in1k-finetune" }, { group = "cu126" }],
 ]
 
 [[tool.uv.index]]
@@ -128,9 +129,9 @@ dinov3 = { git = "https://github.com/facebookresearch/dinov3.git", rev = "54694f
 # nvidia_* CUDA satellites never land on a GPU-less TPU VM.
 torch = [
     { index = "pytorch-cpu", group = "gcp-in1k-finetune", marker = "sys_platform == 'linux'" },
-    { index = "pytorch-cu126", group = "v100" },
+    { index = "pytorch-cu126", group = "cu126" },
 ]
 torchvision = [
     { index = "pytorch-cpu", group = "gcp-in1k-finetune", marker = "sys_platform == 'linux'" },
-    { index = "pytorch-cu126", group = "v100" },
+    { index = "pytorch-cu126", group = "cu126" },
 ]

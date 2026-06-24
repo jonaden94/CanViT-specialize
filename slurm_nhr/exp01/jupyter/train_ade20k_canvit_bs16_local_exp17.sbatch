@@ -41,9 +41,9 @@ log "Args: $*"
 source slurm_nhr/env.sh
 mkdir -p logs/exp01-ade20k-canvit-v100-bs16-local-exp17
 
-VENV=".venv-v100"
+VENV=".venv-cu126"
 if [ ! -d "$VENV" ]; then
-    log "ERROR: $VENV not found. Run: bash _setup_v100/setup.sh"
+    log "ERROR: $VENV not found. Run: UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126"
     exit 1
 fi
 

@@ -13,5 +13,4 @@ build/
 logs/
 checkpoints/
 *.log
-.venv-v100/
 .venv-cu126/

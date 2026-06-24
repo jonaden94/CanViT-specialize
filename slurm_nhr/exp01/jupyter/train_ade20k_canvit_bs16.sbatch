@@ -16,8 +16,8 @@
 # ADE20K CanViT probe training on V100 (jupyter partition), batch_size=16 (default).
 # peak_lr=3e-4 (config default — linear-scaling baseline).
 #
-# Requires .venv-v100 (cu126 torch for V100 sm_70 compat):
-#   bash _setup_v100/setup.sh
+# Requires .venv-cu126 (cu126 torch for V100 sm_70 compat):
+#   UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126
 #
 # Submit:
 #   sbatch slurm_nhr/exp01/jupyter/train_ade20k_canvit_bs16.sbatch
@@ -40,9 +40,9 @@ log "Args: $*"
 source slurm_nhr/env.sh
 mkdir -p logs/exp01-ade20k-canvit-v100-bs16
 
-VENV=".venv-v100"
+VENV=".venv-cu126"
 if [ ! -d "$VENV" ]; then
-    log "ERROR: $VENV not found. Run: bash _setup_v100/setup.sh"
+    log "ERROR: $VENV not found. Run: UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126"
     exit 1
 fi
 

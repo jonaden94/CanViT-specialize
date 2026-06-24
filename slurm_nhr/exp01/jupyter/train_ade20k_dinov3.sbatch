@@ -14,8 +14,8 @@
 ##SBATCH --mail-user=jonathan.henrich@uni-goettingen.de
 
 # DINOv3 baseline probe training on V100 (jupyter partition).
-# Requires .venv-v100 (cu126 torch for V100 sm_70 compat):
-#   bash _setup_v100/setup.sh
+# Requires .venv-cu126 (cu126 torch for V100 sm_70 compat):
+#   UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126
 #
 # Submit with:
 #   sbatch slurm_nhr/exp01/jupyter/train_ade20k_dinov3.sbatch --scene-size 512
@@ -36,9 +36,9 @@ log "Args: $*"
 source slurm_nhr/env.sh
 mkdir -p logs/exp01-ade20k-dinov3-v100
 
-VENV=".venv-v100"
+VENV=".venv-cu126"
 if [ ! -d "$VENV" ]; then
-    log "ERROR: $VENV not found. Run: bash _setup_v100/setup.sh"
+    log "ERROR: $VENV not found. Run: UV_PROJECT_ENVIRONMENT=.venv-cu126 uv sync --no-group cuda --group cu126"
     exit 1
 fi
 
