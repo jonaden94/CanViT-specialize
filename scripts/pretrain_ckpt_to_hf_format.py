@@ -70,6 +70,15 @@ def main(args: Args) -> None:
         },
     }
 
+    # Overlapping-patch models (stride < patch_size) trained with a non-default
+    # patch_stride, which lives OUTSIDE model_config (top-level training field)
+    # and is needed to rebuild the patch-embed conv. Persist it ONLY when set,
+    # so non-overlapping checkpoints produce a byte-for-byte identical config.
+    patch_stride = raw.get("patch_stride")
+    if patch_stride is not None:
+        config["patch_stride"] = patch_stride
+        log.info("Persisted patch_stride=%s (overlapping patches)", patch_stride)
+
     args.out_dir.mkdir(parents=True, exist_ok=True)
     cfg_path = args.out_dir / "config.json"
     sd_path = args.out_dir / "model.safetensors"
