@@ -1,0 +1,21 @@
+TODO
+====
+
+Inconsistency in train-time t=0 glimpse policy between ADE20k and IN1k
+---------------------------------------------------------------------
+On ADE20k the model sees a random glimpse from step 0 in training, whereas
+on IN1k step 0 is always the whole scene. (Both force full-scene t=0 at
+validation.)
+
+  - ADE20k train: start_with_full_scene = cfg.train_start_full = False
+    (train_canvit.py:376-380, config.py:117)
+  - IN1k train:   t0_full_scene = True
+    (train_imagenet.py:356-361)
+
+This is fishy — the two pipelines disagree on something that should probably
+match, and validation forces full-scene t=0 in BOTH cases, so ADE20k has a
+train/val mismatch at t=0 that IN1k does not.
+
+ACTION: Check whether ADE20k training improves when doing the same as for
+ImageNet, i.e. set train_start_full = True (full-scene t=0 in training) and
+compare val mIoU.
